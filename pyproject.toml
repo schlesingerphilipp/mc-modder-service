@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "modder-mc-service"
+version = "0.0.1"
+description = "A Service to generate Minecraft Mods"
+authors = ["Philipp Schlesinger"]
+
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+langgraph = "*"
+langchain-google-genai = "*"
+langchain-anthropic = "*"
+langchain_mistralai = "*"
+langchain-openai = "*"
+langchain-fireworks = "*"
+langchain-cohere = "*"
+redis = "*"
+
+
+[tool.poetry.group.dev.dependencies]
+black="*"
+pylint = "*"
+pylint-quotes = "*"
+pre-commit = "*"
+pytest = "*"
+nbformat = "*"
+ipykernel = "*"
+mock = "*"
+pytest-mock = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+serve = "main.main:serve"
