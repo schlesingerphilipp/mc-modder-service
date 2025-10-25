@@ -11,9 +11,8 @@ def getClient() -> MultiServerMCPClient:
     server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8080/mcp")
     return MultiServerMCPClient(
     {
-        "weather": {
-            "transport": "streamable_http",  # HTTP-based remote server
-            # Ensure you start your weather server on port 8000
+        "desktop-commander": {
+            "transport": "stdio", 
             "url": server_url,
         }
     }
