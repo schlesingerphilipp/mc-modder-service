@@ -6,10 +6,6 @@
     ],
     "service": "workspace",
     "workspaceFolder": "/home/vscode/workspace",
-    "remoteEnv": {
-        "PYPI_PASS": "${localEnv:PYPI_PASS}",
-        "PYPI_USER": "${localEnv:PYPI_USER}",
-    },
     "postCreateCommand": "bash .devcontainer/postCreateCommands.sh",
     "customizations": {
         "vscode": {

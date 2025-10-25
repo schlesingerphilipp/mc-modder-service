@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - 8000:8000
+    command: poetry run serve
+    environment:
+      - MCP_SERVER_URL=http://mcp-gateway:8080/mcp
+    volumes:
+      - ../mods:/mods
+  mcp-gateway:
+    image: docker/mcp-gateway
+    privileged: true
+    ports:
+      - "8080:8080"
+    command:
+      - --port=8080
+      - --transport=streaming
+      - --servers=desktop-commander
+      - --memory=512Mb
+      - --config=/etc/mcp/config.yaml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../mods:/mods
+      - ./mcp-config.yaml:/etc/mcp/config.yaml

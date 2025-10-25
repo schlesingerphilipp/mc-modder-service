@@ -7,14 +7,12 @@ authors = ["Philipp Schlesinger"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<4.0"
-langgraph = "*"
-langchain-google-genai = "*"
-langchain-anthropic = "*"
-langchain_mistralai = "*"
-langchain-openai = "*"
-langchain-fireworks = "*"
-langchain-cohere = "*"
-redis = "*"
+langchain = "1.0.0"
+langgraph = "1.0.0"
+langchain-google-genai = "*" 
+langchain-mcp-adapters = "*"
+fastapi = "0.115.12"
+uvicorn = "0.34.3"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -33,4 +31,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-serve = "main.main:serve"
+serve = "modder_mc_service.main:serve"
