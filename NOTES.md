@@ -1,4 +1,5 @@
 # Notes about different Modding Actions
+This documents holds all current capabilities and their How Tos. They are preprocessed for the agents in modder_mc_service/agent/instructions/
 Each sections documents what needs to be done, to achieve a certain goal
 
 ## Adding a basic custom block without attributes
@@ -32,7 +33,7 @@ We refer to the new block as myblock
 - in src/main/resources/assets/tutorialmod/lang/en_us.json
     - Add a line `"block.tutorialmod.myblock": "Block of MyBlock",` at the top.
 - add src/main/resources/assets/tutorialmod/textures/block/myblock.png with an image of choice
-- in src/main/java/net/kaupenjoe/tutorialmod/block/ModBlocks.java add lines:
+- in src/main/java/com/example/examplemod/block/ModBlocks.java add lines:
 ```java
        public static final RegistryObject<Block> MY_BLOCK = registerBlock("myblock",
                 (properties) -> new Block(properties
@@ -40,7 +41,7 @@ We refer to the new block as myblock
 ```
 
 ### Giving the Block a Sound Effect
-- Add in src/main/java/net/kaupenjoe/tutorialmod/sound/ModSounds.java Line:
+- Add in src/main/java/com/example/examplemod/sound/ModSounds.java Line:
 ```java
     public static final RegistryObject<SoundEvent> MYBLOCK_BREAK = registerSoundEvent("myblock_break");
     public static final RegistryObject<SoundEvent> MYBLOCK_STEP = registerSoundEvent("myblock_step");

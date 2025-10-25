@@ -6,3 +6,10 @@ The argentic System will generate the required resources, pack them to a jar and
 ![Architecture diagram](mc-modder-flow.drawio.png)
 
 _High-level flow: user request → agent → mod resources → packaged mod (jar)_
+
+## Current WIP
+I created example Mods, to learn how to make certain changes, and documented these changes in step by step guides. There are currently two capabilities: 
+- Adding a Block with texture
+- Adding sound interactions to a block (breaking, steppping on it)
+
+These are few but sufficient capabilities to develope an initial version, where I can implement the agent behavior and the required tools, as well as the interface
