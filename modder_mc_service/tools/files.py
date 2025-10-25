@@ -256,3 +256,12 @@ def make_dirs(path: Union[str, Path], mode: int = 0o755, exist_ok: bool = True) 
 	dir_path.mkdir(parents=True, exist_ok=exist_ok, mode=mode)
 
 	return str(dir_path.resolve(strict=False))
+
+
+class FakeMCPClient:
+	"""
+	A fake MCP client until I get the real one working.
+	There has to be a good general MCP for file operations and terminal calls.
+	"""
+	def get_tools(self):
+		return [make_dirs, copy_folder, copy_file, read_file_contents_tool, list_dir_contents, overwrite_file]

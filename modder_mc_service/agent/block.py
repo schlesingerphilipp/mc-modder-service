@@ -1,38 +1,73 @@
+import os
 from langgraph.graph import END, START, StateGraph, MessagesState
-from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
+from langchain_core.messages import  SystemMessage, HumanMessage
 from modder_mc_service.llms.agents import get_google_ai
 from modder_mc_service.llms.tools_calling_invoke import recursive_invoke_with_tools
-from modder_mc_service.util.llm_init import load_env,   LoadEnvResponse
 from modder_mc_service.mcp.client import getClient
-from modder_mc_service.tools.files import make_dirs, copy_folder, read_file_contents, read_file_contents_tool, list_dir_contents, overwrite_file, copy_file
-import os
+from modder_mc_service.agent.nodes import CapabilityExtractor, CapabilityStepExecutor, State, STEP_FINISHED
+from modder_mc_service.tools.files import FakeMCPClient
+
+# TODO: on module load will not work with real MCP
+tools = FakeMCPClient().get_tools()
+
+def plan_and_execute_capability_steps(state: State) -> State: #TODO: why is it dict not state?
+    """
+    Gets the List of capabilities and executes them one by one with the CapabilityStepExecutor Node.
+
+    Args:
+        mod_name: Name of the mod.
+        description: Description of the mod.
+        capabilities: Capabilities required for the mod.
+    Returns:
+        A dictionary with the results of the execution.
+    """
+    for index, capability in enumerate(state["capabilities"]["capabilities"]):
+        capability_executor_node = CapabilityStepExecutor(
+            name=f"capability_executor_{index}",
+            model=get_google_ai(),
+            tools=tools,
+            capability=capability,
+            capability_index=index,
+            mod_name=state["mod_name"],
+            mod_id=state["mod_id"],
+        )
+        state = State(mod_id=state.mod_id, mod_name = state.mod_name, messages = [], capabilities=state.capabilities, step_finished = False, last_error = None).model_dump()
+        state = capability_executor_node.call(state)
+        while not state[STEP_FINISHED]:
+            # It might executes multiple functions like reading/writing files until the step is finished.
+            # TODO: set limits?
+            state = capability_executor_node.call(state)
+        # TODO: What to do with the state after each capability execution?
+        # We would verify etc now. For now we just proceed to the next capability.
+    return state
 
 
-async def create_basic_block(promt: str, mod_name: str) -> dict:
+async def generate_code(promt: str, mod_name: str, mod_id: str) -> dict:
     """
-    Create a Basic Block using the provided prompt.
+    A first iteration of how the code generation could work.
+    We expect that the mod folder was copied from the template folder.
+    Some elements like validation and error handling are missing at this point in time.
     """
-    mcp_client = getClient()
-    tools = await mcp_client.get_tools()
-    tools += [make_dirs, copy_folder, copy_file, read_file_contents_tool, list_dir_contents, overwrite_file]
-    callable_tools = {tool.name: tool for tool in tools}
-    instructions = read_file_contents("modder_mc_service/agent/instructions/basic_block.md")
-    promt = f"You are an Assistant that helps to create a mod for Minecraft. Your task is to create a basic Block by creating and editing files in /mods/{mod_name} (absolute path). There are instructions on how to create the basic block below: \n {instructions} \n You can find assests like png images in /assets folder (absolute path)."
-    agent = get_google_ai(tools = tools)
-    def chatbot(state: MessagesState) -> dict:
-        return {"messages": recursive_invoke_with_tools(agent, callable_tools, state["messages"])}
-    graph_builder = StateGraph(MessagesState)
-    graph_builder.add_node("chatbot", chatbot)
-    graph_builder.add_edge(START, "chatbot")
-    graph_builder.add_edge("chatbot", END)
-    graph = graph_builder.compile()
+    capability_extractor_node = CapabilityExtractor(
+        name="capability_extractor",
+        model=get_google_ai(), # TODO: Try SLMs from Docker
+    )
     
-    state = {}
-    state["messages"] = [
-        SystemMessage(promt, origin_id="promt"), HumanMessage(promt, origin_id="task_create")]
+    graph_builder = StateGraph(State)
+    graph_builder.add_node(capability_extractor_node.name, capability_extractor_node.func)
+    graph_builder.add_node("plan_and_execute_steps", plan_and_execute_capability_steps)
+    graph_builder.add_edge(START, capability_extractor_node.name)
+    graph_builder.add_edge(capability_extractor_node.name, "plan_and_execute_steps")
+    graph_builder.add_edge("plan_and_execute_steps", END)
+    graph = graph_builder.compile()
+    state = State(
+        mod_id=mod_id,
+        mod_name=mod_name,
+        messages=[],
+        capabilities={},
+        step_finished=False,
+        last_error=None,
+        raw_input=promt,
+    )
     graph.invoke(input=state)
-    # check if the directory was created at ../mods/{mod_name}
-    if not os.path.exists(f"/mods/{mod_name}"):
-        raise Exception("Failed to create mod directory. Dir does not exist")
-    # For demonstration, returning a simple dict
-    return {"mod_name": mod_name, "description": description, "status": "created"}
+    return {"mod_name": mod_name, "status": "better look yourself :D. We are debugging here"}
