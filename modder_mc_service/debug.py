@@ -5,6 +5,7 @@ import asyncio
 if __name__ == "__main__":
     #asyncio.run(create_mod_agent("example_mod"))
     promt = "Plaase create a basic block with a black texture."
-    mod_name = "example_mod"
-    mod_id = "example_mod"
-    asyncio.run(generate_code(promt=promt, mod_name=mod_name, mod_id=mod_id))
+    mod_name = "examplemod"
+    mod_id = "examplemod"
+    mod_domain = "com/example"
+    asyncio.run(generate_code(promt=promt, mod_name=mod_name, mod_id=mod_id, mod_domain=mod_domain))

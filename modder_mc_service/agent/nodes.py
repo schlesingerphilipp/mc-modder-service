@@ -16,7 +16,7 @@ class CapabilityItem(BaseModel):
 
     title: str
     folder: str
-
+    elementName: str
 class Capabilities(BaseModel):
     """
     Selected capabilities, which will satisfy the user's request.
@@ -37,6 +37,7 @@ class State(TypedDict):
     raw_input: str
     mod_id: str
     mod_name: str
+    mod_domain: str
     messages: Annotated[list, add_messages]
     capabilities: dict
     current_capability: str
@@ -66,7 +67,11 @@ class CapabilityExtractor(GraphNode):
         You are an Assistant that helps to create a mod for Minecraft.
         This assistance program has certain capabilities like adding basic blocks or giving blocks sound effects. 
         Depending on the user's request,
-        Your task is to extract the fitting capabilities from a list of capabilities.
+        Your task is to think about what elements (like Blocks, Items, Sound Effects, Textures, etc.) are required to satisfy the user's request,
+        and for each of these elements extract the fitting capabilities from a list of capabilities.
+        Each capability has a title a folder where its instructions are stored, and an elementName which corresponds to the name of
+        the element in the source code. So if you add a block, which should be black, the elementName could be 'black_block'.
+        
         These capabilities are:
         {read_file_contents("modder_mc_service/agent/instructions/capabilities.md")}
         """
@@ -107,8 +112,14 @@ class CapabilityStepExecutor(GraphNode):
     model: BaseChatModel
     instruction = """
         You are an Assistant that helps to create a mod for Minecraft.
+        This assistance program has certain capabilities like adding basic blocks or giving blocks sound effects.
+        Each capability has m,ultiple steps to perform. You will be given one of these steps to perform.
+        The step corresponds to a capability, which is executed for one element of the mod.
+        Elements of the mod can be Blocks, Items, Sound Effects, Textures, etc.
+        The name of this element is $ELEMENT_NAME.
         The MOD_ID is $MOD_ID.
         The MOD_NAME is $MOD_NAME.
+
         Your task is to perform the following capability step: $CAPABILITY_STEP
         This is the instruction for this capability:
         $CAPABILITY_INSTRUCTION
@@ -118,10 +129,12 @@ class CapabilityStepExecutor(GraphNode):
         When you are done with the step, respond with 'STEP FINISHED'.
         """
 
-    def __init__(self, name, model: BaseChatModel, tools: List[Runnable], capability: dict, capability_index: int, mod_name: str, mod_id: str):
+    def __init__(self, name, model: BaseChatModel, tools: List[Runnable], capability: dict, capability_index: int, mod_name: str, mod_id: str, mod_domain: str):
         self.model = model.bind_tools(tools=tools)
         self.tools = {tool.name: tool for tool in tools}
         self.capability_title = capability["title"]
+        self.element_name = capability["elementName"]
+        self.mod_domain = mod_domain
         self.capability_instruction = read_file_contents(f"{capability['folder']}/{capability_index}.md")
         self.capability_instruction = self.capability_instruction.replace(
                 "$MOD_NAME", mod_name
@@ -131,6 +144,8 @@ class CapabilityStepExecutor(GraphNode):
                 "$CAPABILITY_INSTRUCTION", self.capability_instruction
             ).replace(
                 "$MOD_ID", mod_id
+            ).replace("$ELEMENT_NAME", self.element_name
+            ).replace("$MOD_DOMAIN", self.mod_domain
             )
         super().__init__(self.call, name=name)
 

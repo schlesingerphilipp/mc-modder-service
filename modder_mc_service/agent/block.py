@@ -10,6 +10,20 @@ from modder_mc_service.tools.files import FakeMCPClient
 # TODO: on module load will not work with real MCP
 tools = FakeMCPClient().get_tools()
 
+def count_files_in_folder(folder_path: str) -> list:
+    """
+    Count the number of files in a folder.
+    Args:
+        folder_path: Path to the folder.
+    Returns:
+        Number of files in the folder.
+    """
+    file_count = 0
+    for root, dirs, files in os.walk(folder_path):
+        file_count += len(files)
+    return file_count
+
+
 def plan_and_execute_capability_steps(state: State) -> State: #TODO: why is it dict not state?
     """
     Gets the List of capabilities and executes them one by one with the CapabilityStepExecutor Node.
@@ -21,28 +35,31 @@ def plan_and_execute_capability_steps(state: State) -> State: #TODO: why is it d
     Returns:
         A dictionary with the results of the execution.
     """
-    for index, capability in enumerate(state["capabilities"]["capabilities"]):
-        capability_executor_node = CapabilityStepExecutor(
-            name=f"capability_executor_{index}",
-            model=get_google_ai(),
-            tools=tools,
-            capability=capability,
-            capability_index=index,
-            mod_name=state["mod_name"],
-            mod_id=state["mod_id"],
-        )
-        state = State(mod_id=state.mod_id, mod_name = state.mod_name, messages = [], capabilities=state.capabilities, step_finished = False, last_error = None).model_dump()
-        state = capability_executor_node.call(state)
-        while not state[STEP_FINISHED]:
-            # It might executes multiple functions like reading/writing files until the step is finished.
-            # TODO: set limits?
+    for capability in state["capabilities"]["capabilities"]:
+        files_in_folder = count_files_in_folder(capability["folder"])
+        for index in range(files_in_folder):
+            capability_executor_node = CapabilityStepExecutor(
+                name=f"capability_executor_{index}",
+                model=get_google_ai(),
+                tools=tools,
+                capability=capability,
+                capability_index=index+1,
+                mod_name=state["mod_name"],
+                mod_id=state["mod_id"],
+                mod_domain=state["mod_domain"],
+            )
+            state["messages"] = []
             state = capability_executor_node.call(state)
-        # TODO: What to do with the state after each capability execution?
-        # We would verify etc now. For now we just proceed to the next capability.
+            while not state[STEP_FINISHED]:
+                # It might executes multiple functions like reading/writing files until the step is finished.
+                # TODO: set limits?
+                state = capability_executor_node.call(state)
+            # TODO: What to do with the state after each capability execution?
+            # We would verify etc now. For now we just proceed to the next capability.
     return state
 
 
-async def generate_code(promt: str, mod_name: str, mod_id: str) -> dict:
+async def generate_code(promt: str, mod_name: str, mod_id: str, mod_domain: str) -> dict:
     """
     A first iteration of how the code generation could work.
     We expect that the mod folder was copied from the template folder.
@@ -63,6 +80,7 @@ async def generate_code(promt: str, mod_name: str, mod_id: str) -> dict:
     state = State(
         mod_id=mod_id,
         mod_name=mod_name,
+        mod_domain=mod_domain,
         messages=[],
         capabilities={},
         step_finished=False,
