@@ -1,5 +1,5 @@
 from modder_mc_service.agent.create import create_mod_agent
-from modder_mc_service.agent.block import generate_code
+from modder_mc_service.agent.generate import generate_code
 import asyncio
 
 if __name__ == "__main__":

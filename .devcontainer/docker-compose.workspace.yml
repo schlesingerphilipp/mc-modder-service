@@ -10,6 +10,7 @@ services:
       - ..:/home/vscode/workspace
       - ../../mods:/mods
       - ../../assets:/assets
+      - "$HOME/Library/Application\ Support/minecraft/mods:$HOME/Library/Application\ Support/minecraft/mods"
     environment:
       - MCP_SERVER_URL=http://mcp-gateway:8080
   mcp-gateway:
