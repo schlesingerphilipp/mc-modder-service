@@ -1,9 +1,6 @@
 import os
-from langgraph.graph import END, START, StateGraph, MessagesState
-from langchain_core.messages import  SystemMessage, HumanMessage
+from langgraph.graph import END, START, StateGraph
 from modder_mc_service.llms.agents import get_google_ai
-from modder_mc_service.llms.tools_calling_invoke import recursive_invoke_with_tools
-from modder_mc_service.mcp.client import getClient
 from modder_mc_service.agent.nodes import CapabilityExtractor, CapabilityStepExecutor, State, STEP_FINISHED
 from modder_mc_service.tools.files import FakeMCPClient
 
@@ -23,6 +20,24 @@ def count_files_in_folder(folder_path: str) -> list:
         file_count += len(files)
     return file_count
 
+def execute_capability_step(state: State, capability: dict, index: int) -> State:
+    capability_executor_node = CapabilityStepExecutor(
+        name=f"capability_executor_{index}",
+        model=get_google_ai(),
+        tools=tools,
+        capability=capability,
+        capability_index=index+1,
+        mod_name=state["mod_name"],
+        mod_id=state["mod_id"],
+        mod_domain=state["mod_domain"],
+    )
+    state["messages"] = []
+    state = capability_executor_node.call(state)
+    while not state[STEP_FINISHED]:
+        # It might executes multiple functions like reading/writing files until the step is finished.
+        # TODO: set limits?
+        state = capability_executor_node.call(state)
+    return state
 
 def plan_and_execute_capability_steps(state: State) -> State: #TODO: why is it dict not state?
     """
@@ -38,22 +53,7 @@ def plan_and_execute_capability_steps(state: State) -> State: #TODO: why is it d
     for capability in state["capabilities"]["capabilities"]:
         files_in_folder = count_files_in_folder(capability["folder"])
         for index in range(files_in_folder):
-            capability_executor_node = CapabilityStepExecutor(
-                name=f"capability_executor_{index}",
-                model=get_google_ai(),
-                tools=tools,
-                capability=capability,
-                capability_index=index+1,
-                mod_name=state["mod_name"],
-                mod_id=state["mod_id"],
-                mod_domain=state["mod_domain"],
-            )
-            state["messages"] = []
-            state = capability_executor_node.call(state)
-            while not state[STEP_FINISHED]:
-                # It might executes multiple functions like reading/writing files until the step is finished.
-                # TODO: set limits?
-                state = capability_executor_node.call(state)
+            state = execute_capability_step(state, capability, index)
             # TODO: What to do with the state after each capability execution?
             # We would verify etc now. For now we just proceed to the next capability.
     return state

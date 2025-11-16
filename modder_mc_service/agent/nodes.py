@@ -123,32 +123,39 @@ class CapabilityStepExecutor(GraphNode):
         Your task is to perform the following capability step: $CAPABILITY_STEP
         This is the instruction for this capability:
         $CAPABILITY_INSTRUCTION
-        You can create and edit files in /mods/$MOD_NAME (absolute path). 
+        You can create and edit files in /$MODS_FOLDER/$MOD_NAME (absolute path). 
         You can find assets like png images and soundfiles ogg in /assets folder (absolute path).
         Use the available tools to perform the step.
         When you are done with the step, respond with 'STEP FINISHED'.
         """
 
-    def __init__(self, name, model: BaseChatModel, tools: List[Runnable], capability: dict, capability_index: int, mod_name: str, mod_id: str, mod_domain: str):
+    def __init__(self, name, model: BaseChatModel, tools: List[Runnable], capability: dict, capability_index: int, mod_name: str, mod_id: str, mod_domain: str, mods_folder: str = "/mods"):
         self.model = model.bind_tools(tools=tools)
         self.tools = {tool.name: tool for tool in tools}
-        self.capability_title = capability["title"]
-        self.element_name = capability["elementName"]
-        self.mod_domain = mod_domain
-        self.capability_instruction = read_file_contents(f"{capability['folder']}/{capability_index}.md")
-        self.capability_instruction = self.capability_instruction.replace(
-                "$MOD_NAME", mod_name
-            ).replace(
-                "$CAPABILITY_STEP", self.capability_title
-            ).replace(
-                "$CAPABILITY_INSTRUCTION", self.capability_instruction
-            ).replace(
-                "$MOD_ID", mod_id
-            ).replace("$ELEMENT_NAME", self.element_name
-            ).replace("$MOD_DOMAIN", self.mod_domain
-            )
+        self.capability_instruction = CapabilityStepExecutor.get_instructions(
+            instruction=self.instruction,
+            title=capability["title"],
+            element_name=capability["elementName"],
+            mod_domain=mod_domain,
+            mod_name=mod_name,
+            mod_id=mod_id,
+            capability_folder=capability["folder"],
+            index=capability_index,
+            mods_folder=mods_folder,
+        )
         super().__init__(self.call, name=name)
 
+    @staticmethod
+    def get_instructions(instruction, title, element_name, mod_domain, mod_name, mod_id, capability_folder, index, mods_folder) -> str:
+        capability_instruction = read_file_contents(f"{capability_folder}/{index}.md")
+        instruction = instruction.replace("$CAPABILITY_STEP", title
+            ).replace("$CAPABILITY_INSTRUCTION", capability_instruction
+            ).replace("$MOD_ID", mod_id
+            ).replace("$ELEMENT_NAME", element_name
+            ).replace("$MOD_DOMAIN", mod_domain
+            ).replace("$MODS_FOLDER", mods_folder
+            ).replace("$MOD_NAME", mod_name)
+        return instruction
     def call(self, state: State):
         """
         A single call to the Agent.
@@ -172,6 +179,7 @@ class CapabilityStepExecutor(GraphNode):
         if len(response.content) > 0:
             messages.append(response)
             # The Agent outputs something to the user, so this step is finished.
+            # TODO: Better detection if step is finished. Use langgraph edges with state condition.
             state[STEP_FINISHED] = True
         elif response.tool_calls:
             for tool_call in response.tool_calls:

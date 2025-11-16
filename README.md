@@ -38,9 +38,19 @@ These are few but sufficient capabilities to develope an initial version, where 
 
 Step by step I will add more capabilities, error handling, validation and generative capabilities for new images and new sounds. Another point are SLMs, as many task are super simple. Local SLMs should be able do it. 
 
+## Working with local model
+Run 
+```bash
+docker desktop enable model-runner --tcp=12434
+```
 
-## Exploration Hypothesis
-The approach of this service is to provide detailed HowTos on singular capabilities, like e.g. adding a sound effect to a block. These capabilities are the tools for the agent, and the agent can choose which tools to use for a given task.
-I am exploring the approach of minimal liberty of LLMs. For Minecraft Mods there is alot of uncertainty with changes across versions. So there is no publicly available Knowledge Base, that would allow an independent black box approach. Changes across Versions render existing tutorials worthless. A specific version requires careful craftsmanship. Still this craftsmanship is not neccessarily deterministic, so that only templating engines with carefully crafted templates would be the only solution. There is space for natural language understanding in the space of exploration. The hypothesis of this approach is that the sum is more than its elements. Specific instructions can be combined. 
-Further LLMs ease the process of injection. New files are well covered by templates, while injecting snippets is not easily done with templates. Like that the approach promises an avenue towards a capable service, even if it is not magically covering everything, it allows to easily add new How Tos aka Capabilities. 
+## Planned Features
 
+- Use a local LLM whenever possible
+- evaluate with my kids
+- add capabilities
+- Host as a webserice 
+- create desktop app to call webservice
+- publish to community
+- collect usage data
+- create evaluations
