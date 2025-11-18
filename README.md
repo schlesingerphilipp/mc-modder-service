@@ -9,8 +9,16 @@ _High-level flow: user request → agent → mod resources → packaged mod (jar
 
 ## Local Setup
 As this project is in an early stage, only a local VSCode setup is available, used by myself. 
-Currently I just use Google gemini. create a file '.env' (see .gitignore) with `GEMINI_API_KEY=yourkey`.
+Currently I just use Google gemini, and LangSmith Tracing. Create a file '.env' (see .gitignore) with 
+```
+GEMINI_API_KEY=secret
+LANGCHAIN_API_KEY=secret
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_PROJECT=your-project-name
+```
 
+I personally only realy use the unit tests for execution. There is are [settings](.vscode/settings.json) for VSCode, describing the parameters for the unit test setup.
 There is a [lauch setting](.vscode/launch.json) for VSCode, and a devcontainer setup. Open the project in the devcontainer setup, there you can run the debugging entry point using VSCode. 
  The debug entry point is defined here [debug.py](modder_mc_service/debug.py)
 This setup expects some folders to be present. Check the [devcontainer setup](.devcontainer/docker-compose.workspace.yml) for code (better than words). Most importantly we are mounting
@@ -30,7 +38,7 @@ The mod name is not jet replaced in the build properties, so all mods are named 
 
 
 ## Current WIP
-I created example Mods, to learn how to make certain changes, and documented these changes in step by step guides. There are currently two capabilities: 
+I created example Mods, to learn how to make certain changes, and documented these changes in step by step guides, and as alternative in a git diff. There are currently two capabilities: 
 - Adding a Block with texture
 - Adding sound interactions to a block (breaking, steppping on it)
 
@@ -38,11 +46,6 @@ These are few but sufficient capabilities to develope an initial version, where 
 
 Step by step I will add more capabilities, error handling, validation and generative capabilities for new images and new sounds. Another point are SLMs, as many task are super simple. Local SLMs should be able do it. 
 
-## Working with local model
-Run 
-```bash
-docker desktop enable model-runner --tcp=12434
-```
 
 ## Planned Features
 
