@@ -194,3 +194,95 @@ class CapabilityStepExecutor(GraphNode):
                     state["last_error"] = str(e)
         state["messages"] = messages
         return state
+    
+class CapabilityDiffExecutor(GraphNode):
+    """
+    An Agent to apply all changes of a Diff representing a Capability. 
+    Afterwards its results get verified.
+    """
+
+    model: BaseChatModel
+    instruction = """
+        You are an Assistant that helps to create a mod for Minecraft.
+        This assistance program has certain capabilities like adding basic blocks or giving blocks sound effects.
+        Each capability is represented by a Diff, which contains all changes needed to be applied to the mod codebase. 
+        Your task is to apply all changes from the Diff to the codebase using the available tools.
+        
+        Elements of the mod can be Blocks, Items, Sound Effects, Textures, etc.
+        The name of this element is $ELEMENT_NAME.
+        The MOD_ID is $MOD_ID.
+        The MOD_NAME is $MOD_NAME.
+
+        This is the Diff for this capability:
+        $CAPABILITY_DIFF
+        You can create and edit files in /$MODS_FOLDER/$MOD_NAME (absolute path). 
+        Files in the diff are relative to /$MODS_FOLDER/$MOD_NAME.
+        When you create new files or folders, make sure to prepend /$MODS_FOLDER/$MOD_NAME to the path.
+        You can find assets like png images and soundfiles ogg in /assets folder (absolute path).
+        Use the available tools to apply the changes from the Diff.
+        When you are done with the step, respond with 'STEP FINISHED'.
+        """
+
+    def __init__(self, name, model: BaseChatModel, tools: List[Runnable], capability: dict, mod_name: str, mod_domain: str, mods_folder: str = "/mods"):
+        self.model = model.bind_tools(tools=tools)
+        self.tools = {tool.name: tool for tool in tools}
+        self.capability_instruction = CapabilityDiffExecutor.get_instructions(
+            instruction=self.instruction,
+            title=capability["title"],
+            element_name=capability["elementName"],
+            mod_domain=mod_domain,
+            mod_name=mod_name,
+            capability_folder=capability["folder"],
+            mods_folder=mods_folder,
+        )
+        super().__init__(self.call, name=name)
+
+    @staticmethod
+    def get_instructions(instruction, title, element_name, mod_domain, mod_name, capability_folder, mods_folder) -> str:
+        capability_diff = read_file_contents(f"{capability_folder}")
+        instruction = instruction.replace("$CAPABILITY_STEP", title
+            ).replace("$CAPABILITY_DIFF", capability_diff
+            ).replace("$ELEMENT_NAME", element_name
+            ).replace("$MOD_DOMAIN", mod_domain
+            ).replace("$MOD_NAME", mod_name
+            ).replace("$MODS_FOLDER", mods_folder)
+
+        return instruction
+    def call(self, state: State):
+        """
+        A single call to the Agent.
+        The flow control of the conversation happens in the Graph.
+        The Transator will decide if it should call functions, or directly reply.
+
+        Args:
+            state (State): The current state of the Conversation.
+
+        Returns:
+            _type_: The State after the Agent was invoked once, and maybe one new function call results.
+        """
+        messages = state["messages"]
+        if not messages or len(messages) == 0:
+
+            messages = [
+                SystemMessage(content=self.capability_instruction),
+                HumanMessage(content="Perform the capability step as described above."),
+            ]
+        response: AIMessage = self.model.invoke(input=messages)
+        if len(response.content) > 0:
+            messages.append(response)
+            # The Agent outputs something to the user, so this step is finished.
+            # TODO: Better detection if step is finished. Use langgraph edges with state condition.
+            state[STEP_FINISHED] = True
+        elif response.tool_calls:
+            for tool_call in response.tool_calls:
+                selected_tool = self.tools[tool_call["name"].lower()]
+                try:
+                    tool_msg = selected_tool.invoke(tool_call)
+                    # only add the response if the tool call is successful
+                    messages.append(response)
+                    messages.append(tool_msg)
+                except ValueError as e:
+                    state[STEP_FINISHED] = True
+                    state["last_error"] = str(e)
+        state["messages"] = messages
+        return state

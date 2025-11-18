@@ -8,5 +8,5 @@ COPY poetry.lock ./poetry.lock
 COPY pyproject.toml ./pyproject.toml
 COPY README.md ./README.md
 COPY Makefile ./Makefile
-COPY .llm_env ./.llm_env
+COPY .env ./.env
 RUN make install

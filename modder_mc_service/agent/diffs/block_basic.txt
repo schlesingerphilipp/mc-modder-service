@@ -1,0 +1,61 @@
+diff --git a/src/generated/resources/assets/$MOD_NAME/blockstates/$ELEMENT_NAME.json b/src/generated/resources/assets/$MOD_NAME/blockstates/$ELEMENT_NAME.json
+new file mode 100644
+index 0000000..26b85c0
+--- /dev/null
++++ b/src/generated/resources/assets/$MOD_NAME/blockstates/$ELEMENT_NAME.json
+@@ -0,0 +1,7 @@
++    {
++  "variants": {
++    "": {
++      "model": "$MOD_NAME:block/$ELEMENT_NAME"
++    }
++  }
++}
+diff --git a/src/generated/resources/assets/$MOD_NAME/models/block/$ELEMENT_NAME.json b/src/generated/resources/assets/$MOD_NAME/models/block/$ELEMENT_NAME.json
+new file mode 100644
+index 0000000..6619b68
+--- /dev/null
++++ b/src/generated/resources/assets/$MOD_NAME/models/block/$ELEMENT_NAME.json
+@@ -0,0 +1,6 @@
++{
++  "parent": "minecraft:block/cube_all",
++  "textures": {
++    "all": "$MOD_NAME:block/$ELEMENT_NAME"
++  }
++}
+\ No newline at end of file
+diff --git a/src/generated/resources/assets/$MOD_NAME/models/item/$ELEMENT_NAME.json b/src/generated/resources/assets/$MOD_NAME/models/item/$ELEMENT_NAME.json
+new file mode 100644
+index 0000000..47c0fbe
+--- /dev/null
++++ b/src/generated/resources/assets/$MOD_NAME/models/item/$ELEMENT_NAME.json
+@@ -0,0 +1,3 @@
++{
++  "parent": "$MOD_NAME:block/$ELEMENT_NAME"
++}
+\ No newline at end of file
+diff --git a/src/main/java/$MOD_DOMAIN/$MOD_NAME/blocks/ModBlocks.java b/src/main/java/$MOD_DOMAIN/$MOD_NAME/blocks/ModBlocks.java
+index d8c6076..e139fff 100644
+--- a/src/main/java/$MOD_DOMAIN/$MOD_NAME/blocks/ModBlocks.java
++++ b/src/main/java/$MOD_DOMAIN/$MOD_NAME/blocks/ModBlocks.java
+@@ -22,6 +22,10 @@ public class ModBlocks {
+     public static final DeferredRegister<Block> BLOCKS =
+             DeferredRegister.create(ForgeRegistries.BLOCKS, $MOD_NAME.MOD_ID);
+ 
++       public static final RegistryObject<Block> $ELEMENT_NAME = registerBlock("$ELEMENT_NAME",
++                (properties) -> new Block(properties
++                        .strength(4f).requiresCorrectToolForDrops()));
++
+     public static <T extends Block> RegistryObject<T> registerBlock(String name, Function<BlockBehaviour.Properties, T> function) {
+         RegistryObject<T> toReturn = BLOCKS.register(name,
+                 () -> function.apply(BlockBehaviour.Properties.of().setId(ResourceKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath($MOD_NAME.MOD_ID, name)))));
+diff --git a/src/main/resources/assets/$MOD_NAME/lang/en_us.json b/src/main/resources/assets/$MOD_NAME/lang/en_us.json
+new file mode 100644
+index 0000000..65e293f
+--- /dev/null
++++ b/src/main/resources/assets/$MOD_NAME/lang/en_us.json
+@@ -0,0 +1,3 @@
++{
++    "block.$MOD_NAME.$ELEMENT_NAME": "Block of $ELEMENT_NAME"
++}
+\ No newline at end of file

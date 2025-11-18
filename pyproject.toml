@@ -9,6 +9,7 @@ authors = ["Philipp Schlesinger"]
 python = ">=3.11,<4.0"
 langchain = "1.0.0"
 langgraph = "1.0.0"
+langsmith = "*"
 langchain-google-genai = "*" 
 langchain-mcp-adapters = "*"
 fastapi = "0.115.12"

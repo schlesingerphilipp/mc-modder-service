@@ -9,7 +9,7 @@ _High-level flow: user request → agent → mod resources → packaged mod (jar
 
 ## Local Setup
 As this project is in an early stage, only a local VSCode setup is available, used by myself. 
-Currently I just use Google gemini. create a file '.llm_env' (see .gitignore) with `GEMINI_API_KEY=yourkey`.
+Currently I just use Google gemini. create a file '.env' (see .gitignore) with `GEMINI_API_KEY=yourkey`.
 
 There is a [lauch setting](.vscode/launch.json) for VSCode, and a devcontainer setup. Open the project in the devcontainer setup, there you can run the debugging entry point using VSCode. 
  The debug entry point is defined here [debug.py](modder_mc_service/debug.py)

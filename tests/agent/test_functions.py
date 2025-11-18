@@ -42,7 +42,7 @@ def assert_that_step_inserted_to_file(state, expected_file_path: str, inserted_c
 def assert_that_step_read_the_file(state, expected_file_path: str):
     ai_message = state["messages"][-2] # get the AI message before the tool response
     tool_call_name, tool_call_args = _get_func_name_and_args_from_ai_message(ai_message)
-    assert tool_call_name == "read_file", f"Expected tool 'read_file', got '{tool_call_name}'"
+    assert tool_call_name == "read_file_contents_tool", f"Expected tool 'read_file_contents_tool', got '{tool_call_name}'"
     actual_path = tool_call_args.get("path", None)
     assert actual_path is not None, "No path argument found in tool call"
     assert actual_path == expected_file_path, f"Expected file path {expected_file_path}, got {actual_path}"

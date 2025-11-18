@@ -7,6 +7,7 @@ from tests.agent.data_capability_test import get_expected_basic_block_for_step, 
 import os
 import shutil
 import pytest
+from dotenv import load_dotenv
 
 @pytest.fixture  
 def temp_dir(tmp_path):  
@@ -56,6 +57,7 @@ with the content:
 
 
 def test_capability_step_basic_block(tmpdir):
+    load_dotenv(dotenv_path=".env", override=True)
     basic_block_instructions_folder = "modder_mc_service/agent/instructions/block_basic"
     # setup copy /mods/template to tmpdir/mod_name
     shutil.copytree("/mods/template", os.path.join(tmpdir, MOD_NAME))
@@ -77,8 +79,8 @@ def test_capability_step_basic_block(tmpdir):
         STEP_FINISHED: False,
         }
         expected_folder_path, expected_file_path, expected_content, inserted_content = get_expected_basic_block_for_step(step_index)
-        expected_folder_path_step_i = f"{str(tmpdir)}/{expected_folder_path}"
-        expected_file_path_step_i = f"{str(tmpdir)}/{expected_file_path}"
+        expected_folder_path_step_i = f"{str(tmpdir)}/{expected_folder_path}" if expected_folder_path else None
+        expected_file_path_step_i = f"{str(tmpdir)}/{expected_file_path}" if expected_file_path else None
         assert_step(
             model=model,
             tools=tools,
@@ -92,6 +94,7 @@ def test_capability_step_basic_block(tmpdir):
             inserted_content =inserted_content,
             index=step_index,
         )
+    print("done")
 
     
 

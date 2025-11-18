@@ -1,8 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from modder_mc_service.util.llm_init import load_env,   LoadEnvResponse
 import os 
-resp: LoadEnvResponse = load_env()
-assert resp.LEVEL < 2, resp.MSG
+
 def get_google_ai() -> ChatGoogleGenerativeAI:
     """Initializes and returns a Google Gemini LLM instance.
 
